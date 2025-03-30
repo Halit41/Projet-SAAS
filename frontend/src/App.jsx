@@ -11,7 +11,7 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL
 
-// Page publique type Linktree
+// Page publique : /u/:slug
 function UserLinksPage() {
   const { slug } = useParams()
   const [links, setLinks] = useState([])
@@ -58,7 +58,7 @@ function UserLinksPage() {
   )
 }
 
-// Page principale après connexion
+// Dashboard privé
 function Dashboard() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -72,23 +72,29 @@ function Dashboard() {
 
   const handleRegister = async () => {
     try {
-      const res = await axios.post(`${API_URL}/auth/register`, { email, password })
-      setMessage("✅ Inscription réussie. Connectez-vous.")
+      setMessage("Inscription en cours...")
+      await axios.post(`${API_URL}/auth/register`, { email, password })
+      setMessage("✅ Inscription réussie. Vous pouvez maintenant vous connecter.")
       setEmail('')
       setPassword('')
     } catch (err) {
-      setMessage(err.response?.data?.error || "Erreur à l'inscription")
+      console.error(err)
+      const msg = err.response?.data?.error || "Erreur à l'inscription"
+      setMessage(`❌ ${msg}`)
     }
   }
 
   const handleLogin = async () => {
     try {
+      setMessage("Connexion en cours...")
       const res = await axios.post(`${API_URL}/auth/login`, { email, password })
       setToken(res.data.token)
       setMessage("Connexion réussie ✅")
       fetchLinks(res.data.token)
     } catch (err) {
-      setMessage(err.response?.data?.error || "Erreur à la connexion")
+      console.error(err)
+      const msg = err.response?.data?.error || "Erreur à la connexion"
+      setMessage(`❌ ${msg}`)
     }
   }
 
@@ -103,7 +109,8 @@ function Dashboard() {
       setUrl('')
       fetchLinks(token)
     } catch (err) {
-      setMessage("Erreur lors de la création du lien")
+      console.error(err)
+      setMessage("❌ Erreur lors de la création du lien")
     }
   }
 
@@ -143,28 +150,28 @@ function Dashboard() {
             <button onClick={handleLogin} className="bg-blue-500 text-white p-2 rounded w-full">
               Se connecter
             </button>
-            <button onClick={handleRegister} className="bg-gray-500 text-white p-2 rounded w-full">
+            <button onClick={handleRegister} className="bg-gray-600 text-white p-2 rounded w-full">
               S'inscrire
             </button>
           </div>
         </>
       )}
 
-      {message && <p className="text-center text-sm text-gray-700 mb-4">{message}</p>}
+      {message && <p className="text-center text-sm text-red-600 mb-4">{message}</p>}
 
       {token && (
         <div className="mt-6 border-t pt-4">
           <h2 className="text-xl font-semibold mb-2">Créer un lien</h2>
           <input
             type="text"
-            placeholder="Titre (ex: Mon Instagram)"
+            placeholder="Titre (ex: Instagram)"
             className="border p-2 w-full mb-2"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
           <input
             type="text"
-            placeholder="URL (ex: https://instagram.com/...)"
+            placeholder="URL (ex: https://...)"
             className="border p-2 w-full mb-2"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
@@ -209,7 +216,6 @@ function Dashboard() {
   )
 }
 
-// App principal avec routes
 function App() {
   return (
     <Router>
