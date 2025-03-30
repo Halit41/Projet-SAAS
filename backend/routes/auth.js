@@ -1,36 +1,39 @@
-const express = require("express")
-const router = express.Router()
-const bcrypt = require("bcrypt")
-const pool = require("../db")
+const express = require("express");
+const router = express.Router();
+const bcrypt = require("bcrypt");
+const pool = require("../db");
+
+console.log("✅ Fichier auth.js bien chargé");
 
 router.post("/register", async (req, res) => {
-  const { email, password } = req.body
-  console.log("📥 Données reçues :", email, password)
+  const { email, password } = req.body;
+  console.log("📥 Données reçues :", email, password);
 
   if (!email || !password) {
-    console.log("⛔ Champs manquants")
-    return res.status(400).json({ error: "Email et mot de passe requis" })
+    console.log("⛔ Champs manquants");
+    return res.status(400).json({ error: "Email et mot de passe requis" });
   }
 
   try {
-    const existing = await pool.query("SELECT * FROM users WHERE email = $1", [email])
+    const existing = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    console.log("🔍 Requête SELECT passée");
+
     if (existing.rows.length > 0) {
-      console.log("⚠️ Email déjà utilisé :", email)
-      return res.status(400).json({ error: "Email déjà utilisé" })
+      console.log("⚠️ Email déjà utilisé :", email);
+      return res.status(400).json({ error: "Email déjà utilisé" });
     }
 
-    const hashed = await bcrypt.hash(password, 10)
-    await pool.query("INSERT INTO users (email, password) VALUES ($1, $2)", [
-      email,
-      hashed,
-    ])
+    const hashed = await bcrypt.hash(password, 10);
+    console.log("🔐 Mot de passe hashé");
 
-    console.log("✅ Utilisateur enregistré :", email)
-    res.status(200).json({ message: "Inscription réussie" })
+    await pool.query("INSERT INTO users (email, password) VALUES ($1, $2)", [email, hashed]);
+    console.log("✅ Utilisateur ajouté :", email);
+
+    res.status(200).json({ message: "Inscription réussie" });
   } catch (err) {
-    console.error("❌ Erreur SQL :", err.message)
-    res.status(500).json({ error: "Erreur serveur" })
+    console.error("❌ Erreur SQL :", err.message);
+    res.status(500).json({ error: "Erreur serveur" });
   }
-})
+});
 
-module.exports = router
+module.exports = router;
