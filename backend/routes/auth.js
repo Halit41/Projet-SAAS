@@ -1,33 +1,29 @@
-const express = require("express")
-const router = express.Router()
-const bcrypt = require("bcrypt")
-const pool = require("../db")
-
 router.post("/register", async (req, res) => {
-  const { email, password } = req.body
+  const { email, password } = req.body;
+  console.log("📥 Données reçues :", email, password); // debug
+
   if (!email || !password) {
-    return res.status(400).json({ error: "Email et mot de passe requis" })
+    console.log("⛔ Champs manquants");
+    return res.status(400).json({ error: "Email et mot de passe requis" });
   }
 
   try {
-    const existing = await pool.query("SELECT * FROM users WHERE email = $1", [email])
+    const existing = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (existing.rows.length > 0) {
-      return res.status(400).json({ error: "Email déjà utilisé" })
+      console.log("⚠️ Email déjà utilisé :", email);
+      return res.status(400).json({ error: "Email déjà utilisé" });
     }
 
-    const hashed = await bcrypt.hash(password, 10)
+    const hashed = await bcrypt.hash(password, 10);
     await pool.query(
       "INSERT INTO users (email, password) VALUES ($1, $2)",
       [email, hashed]
-    )
+    );
 
-    res.status(200).json({ message: "Inscription réussie" })
+    console.log("✅ Utilisateur enregistré :", email);
+    res.status(200).json({ message: "Inscription réussie" });
   } catch (err) {
-    console.error("❌ Erreur SQL :", err.message)
-	console.error(err.stack)
-
-    res.status(500).json({ error: "Erreur serveur" })
+    console.error("❌ Erreur SQL :", err.message);
+    res.status(500).json({ error: "Erreur serveur" });
   }
-})
-
-module.exports = router
+});
