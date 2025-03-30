@@ -23,7 +23,9 @@ router.post("/register", async (req, res) => {
 
     res.status(200).json({ message: "Inscription réussie" })
   } catch (err) {
-    console.error(err)
+    console.error("❌ Erreur SQL :", err.message)
+	console.error(err.stack)
+
     res.status(500).json({ error: "Erreur serveur" })
   }
 })
